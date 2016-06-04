@@ -1,28 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <Windows.h>
-void sugo() {
-	/*File-bol ir a kepernyore.*/
-	FILE *tutorial = NULL;
-	int karakter;
-	tutorial = fopen("Help.txt", "rt");
-	if (tutorial != NULL) {
-		karakter = 1;
-		while (karakter != EOF) {
-			karakter = fgetc(tutorial);
-			if (karakter != EOF) printf("%c", karakter);
-		}
-		printf("\n");
-		fclose(tutorial);
-	}
-}
+
 void tapogat(int **t, int sor, int oszlop, int y, int x) {
-	/*Letapogatja, hany szomszedos mezon van akna. Az erteket a tombben tarolja.
-	Ha 0, rekurzioval megvizsgalja a szomszedos mezoket is.*/
-	/*Parameterlista: tomb es merete, kerdeses mezo y es x koordinataja.*/
+	/*맵에 지뢰위치를 저장하는 함수입니다.*/
+	/*매개변수: 맵의 크기, x와 y의 필드 좌표.*/
 	int akna = 0;
-	/*Ehhez a szamlalashoz inkabb meg se probaltam ciklust irni.*/
+	/*배열 주소에 지뢰를 저장합니다.*/
 	if (y - 1 >= 0 && x - 1 >= 0 && t[y - 1][x - 1] == 'B') akna++;
 	if (y - 1 >= 0 && 1 && t[y - 1][x] == 'B') akna++;
 	if (y - 1 >= 0 && x + 1<oszlop && t[y - 1][x + 1] == 'B') akna++;
@@ -31,9 +15,9 @@ void tapogat(int **t, int sor, int oszlop, int y, int x) {
 	if (y + 1<sor &&     x - 1 >= 0 && t[y + 1][x - 1] == 'B') akna++;
 	if (y + 1<sor && 1 && t[y + 1][x] == 'B') akna++;
 	if (y + 1<sor && x + 1<oszlop && t[y + 1][x + 1] == 'B') akna++;
-	t[y][x] = akna + '0'; /*ASCII-kod tarolasa*/
+	t[y][x] = akna + '0'; /*아스키코드 저장*/
 	if (t[y][x] == '0') {
-		/*A rekurziot is kireszleteztem.*/
+		/*재귀함수.*/
 		if (y - 1 >= 0 && x - 1 >= 0 && t[y - 1][x - 1] != '0') tapogat(t, sor, oszlop, y - 1, x - 1);
 		if (y - 1 >= 0 && 1 && t[y - 1][x] != '0') tapogat(t, sor, oszlop, y - 1, x);
 		if (y - 1 >= 0 && x + 1<oszlop && t[y - 1][x + 1] != '0') tapogat(t, sor, oszlop, y - 1, x + 1);
@@ -47,7 +31,7 @@ void tapogat(int **t, int sor, int oszlop, int y, int x) {
 int foglal(int ***t, int sor, int oszlop) {
 	/*Dinamikus memoriat foglal.
 	Sikertelen memfoglalas eseten a pointer lenullazodik, a fv. visszateresi ertekkel is jelez.*/
-	/*Parameterek:a t�mb cime(nullpointer), merete.
+	/*매개변수: 맵의 크기.
 	Visszateresi ertek: 0, ha sikeres, 1, ha sikertelen a memfoglalas.*/
 	int i, hiba = 0;
 	*t = (int**)malloc(sor * sizeof(int*));
@@ -69,8 +53,8 @@ int foglal(int ***t, int sor, int oszlop) {
 	return 0;
 }
 int indit(int ***t, int sor, int oszlop, int akna) {
-	/*Tombinicializalo.
-	A tomb elemeit kinullazza, majd veletlenszer�en kitolti aknakat jelento 'B' karakterekkel(ASCII).
+	/*배열초기화
+	맵의 요소 재설정, majd veletlenszer�en kitolti aknakat jelento 'B' karakterekkel(ASCII).
 	Ha nincs tomb (a parameterlistan nullpointer van), meghivja a foglal fv.-t.
 	Az aknak szama nem haladhatja meg a tomb elemszamanak 2/3-anak egeszreszet.
 	Ha a foglal futasa sikertelen, visszateresi ertekkel jelez.*/
@@ -135,13 +119,7 @@ void szabad(int ***t, int sor) {
 	*t = NULL;
 }
 int betolt(int ***t, int *sor, int *oszlop, int *akna) {
-	/*Mentett jatekot betolto fv.
-	Fajlbol beolvassa a tomb meretet, meghivja hozza a foglal fv.-t,
-	majd feltolti a tombot a fajlban talalhato elemekkel.
-	Ugyel a sor, oszlop es akna valtozok ervenyessegenek felteteleire.
-	Ha problema lep fel, a pointer nulla lesz, a visszateresi ertek pedig 1.*/
-	/*Parameterek: tomb es meretenek pointerei.
-	Visszateres: 0: siker; 1: kudarc*/
+	/*저장된 게임을 불러옵니다.*/
 	FILE *game;
 	int y, x, hiba = 0;
 	game = fopen("Save.txt", "rt");
@@ -175,11 +153,7 @@ int betolt(int ***t, int *sor, int *oszlop, int *akna) {
 	return hiba;
 }
 int tarol(int **t, int sor, int oszlop, int akna) {
-	/*Jatekmento fuggveny.
-	A tomb meretet es elemeit fajlban tarolja.
-	Sikeressegerol visszateresi ertekkel jelez.*/
-	/*Parameterlista: tomb es merete.
-	Visszateres: 1: sikertelen, 0: sikeres*/
+	/*게임을 저장합니다*/
 	FILE *game = NULL;
 	int y, x, hiba = 0;
 	game = fopen("Save.txt", "wt");
@@ -200,17 +174,11 @@ int tarol(int **t, int sor, int oszlop, int akna) {
 	return hiba;
 }
 int olvas(int **t, int sor, int oszlop, int akna, int *nyero) {
-	/*Ez kommunikal a felhasznaloval a jatek futasakor, ez hivja meg a vizsgal es a tarol fv-t.
-	Parameterlistan leadj a vizsgal visszateresi erteket,
-	valamint visszateresi ertekkel jelzi a jatekos szandekat:
-	ujrakezdes, folytatas, kilepes.*/
-	/*Parameterlistan: tomb es merete, cim a vizsgal visszateresi ertekenek.
-	Visszateresi ertekek: -1: uj jatek, 0: kilepes, 1: folytatas.*/
+	/*반환값이 -1일 경우 재시작, 0일 경우 종료, 1일 경우 저장.*/
 	int i, y, x;
-	printf("Melyik mezon nincs akna?\nPl.: 5:6\n0:1 Mentes es kilepes\n0:2 Kilepes\n0:3 Uj jatek\n");
+	printf("지뢰가 없는 곳은?\n예시: 5:6\n0:1 저장하고 메인메뉴\n0:2 메인메뉴\n0:3 재시작\n");
 	while (1) {
-		/*A ciklusra a hibasan beirt adatok miatt van szukseg.
-		A ciklus megszakad, ha a felhasznalo ertelmezheto adatokat visz be.*/
+		/*사용자의 키입력을 받습니다. y값이 0일 경우와 아닐 경우로 나누어지며 y와 x값이 행열의 범위를 넘어가면 안됩니다.*/
 		scanf("%d:%d", &y, &x);
 		system("cls");
 		if (y == 0 && (x == 1 || x == 2 || x == 3)) {
@@ -221,13 +189,14 @@ int olvas(int **t, int sor, int oszlop, int akna, int *nyero) {
 			i = 0;
 			break;
 		}
-		printf("A helyes formatum: sor:oszlop\n0:1 Mentes es kilepes\n0:2 Kilepes\n0:3 Uj jatek\n");
+		printf("행과 열을 벗어났습니다. 다시 입력하십시오.\n0:1 저장하고 메인메뉴\n0:2 종료\n0:3 새 게임\n");
 	}
 	if (i)
+		//게임을 저장하거나 재시작합니다.
 		switch (x) {
 		case 1:
 			if (tarol(t, sor, oszlop, akna)) {
-				fprintf(stderr, "Memoriahiba! A jatek nem mentheto.\n");
+				fprintf(stderr, "메모리 오류! 이 게임은 저장할 수 없습니다.\n");
 				return 1;
 			}
 			else return 0;
@@ -240,15 +209,11 @@ int olvas(int **t, int sor, int oszlop, int akna, int *nyero) {
 			break;
 		}
 	else
-		/*A jatekos 1-tol n-ig adhat meg szamokat, a tomb viszont 0-tol (n-1)-ig van indexelve.*/
 		*nyero = vizsgal(t, sor, oszlop, y - 1, x - 1);
 	return 1;
 }
 void kiir(int **t, int sor, int oszlop, int akna) {
-	/*Megjeleniti az aknamezot a kepernyon.
-	Az int akna parameter logikai erteket var:
-	igaz: a 'B'-k is megjelennek (a jatek vegen, amikor kiderul az igazsag)
-	hamis: csak a szomsz�dos aknak szamat jelzo szamok jelennek meg*/
+	/*화면에 지뢰밭을 표시합니다.*/
 	int x, y;
 	if (akna) {
 		putchar(' ');
@@ -306,12 +271,12 @@ void tomb(int sor, int oszlop, int akna) {
 	while (folytat == -1) {
 		if (5 <= sor && sor <= 35 && 5 <= oszlop && oszlop <= 35 && akna <= (2 * sor*oszlop) / 3) {
 			if (indit(&t, sor, oszlop, akna)) {
-				fprintf(stderr, "Memoriahiba!\n");
+				fprintf(stderr, "메모리 오류!\n");
 				break;
 			}
 		}
 		else if (betolt(&t, &sor, &oszlop, &akna)) {
-			fprintf(stderr, "Nincs folytathato jatek.\n");
+			fprintf(stderr, "저장된 게임이 없습니다.\n");
 			break;
 		}
 		folytat = 1;
@@ -323,10 +288,10 @@ void tomb(int sor, int oszlop, int akna) {
 				kiir(t, sor, oszlop, nyero);
 			switch (nyero) {
 			case 1:
-				printf("Gratulalok! Nyertel!\n");
+				printf("축하합니다! 승리하셨습니다.\n");
 				break;
 			case -1:
-				printf("Sajnos most nem nyertel! Probald ujra!\n");
+				printf("안타깝습니다. 다시 시도해보세요.!\n");
 				break;
 			}
 		}
@@ -335,44 +300,43 @@ void tomb(int sor, int oszlop, int akna) {
 		szabad(&t, sor);
 }
 void belep() {
-	/*Ez kommunikal a felhasznaloval kozvetlenul a jatek indulasa elott, ha a jatekos egyeni nehezsegi szintet akar.
-	Keri a sorok, oszlopok, aknak szamat, majd meghivja a tomb fv.-t.*/
+	/*사용자지정 맵을 만듭니다.*/
 	int i, sor, oszlop, akna;
-	printf("Adj meretet!\nPl.: 20*30\nMegse: 0*0\n");
+	printf("크기 입력!\n형식 : 행*열\n메인메뉴 : 0*0\n");
 	while (1) {
-		/*Ez a ciklus is akkor szakad meg, amikor nincs szukseg a hibauzenetre.*/
 		scanf("%d*%d", &sor, &oszlop);
 		system("cls");
+		//행열의 값이 0*0이면 메인메뉴로 돌아갑니다.
 		if (sor == 0 && oszlop == 0) {
 			i = 0;
 			break;
 		}
+		//행열의 크기는 5~35사이로 제한합니다.
 		if (5 <= sor && 5 <= oszlop && sor <= 35 && oszlop <= 35) {
 			i = 1;
 			break;
 		}
-		printf("A helyes formatum: sor*oszlop\nA sorok es oszlopok szama legalabb 5, legfeljebb 35 kehet.\nMegse: 0*0\n");
+		printf("형식 : 행*열\n행과 열은 최소 5, 최대 35 입니다.\n메인메뉴 : 0*0\n");
 	}
 	if (i) {
 		i = (2 * sor*oszlop) / 3;
-		printf("Add meg az aknak szamat!\n");
+		printf("지뢰 개수를 입력!\n");
 		while (1) {
 			scanf("%d", &akna);
 			system("cls");
 			if (5 <= akna && akna <= i)
 				break;
-			printf("Ekkora meret eseten az aknak szama legalabb 5, legfeljebb %d lehet.\n", i);
+			printf("지뢰의 최소 5, 최대 %d 입니다.\n", i);
 		}
 		tomb(sor, oszlop, akna);
 	}
 }
 int main() {
-	/*Tartalmazza a fomenut, kepes a belep, a tomb es a sugo fv.-ek meghivasara.*/
 	int menu, alm;
 	FILE *tutorial = NULL;
 	while (5) {
-		/*Fomenu. Eleg, ha kilepeskor van vege.*/
-		printf("0 kilepes\n1 sugo\n2 uj jatek\n3 jatek folytatasa\n");
+		/*메인 메뉴*/
+		printf("0 종료\n1 새 게임\n2 게임 불러오기\n");
 		scanf("%d", &menu);
 		system("cls");
 		switch (menu) {
@@ -380,10 +344,7 @@ int main() {
 			return 0;
 			break;
 		case 1:
-			sugo();
-			break;
-		case 2:
-			printf("0 vissza\n1: 10*10; 10 akna\n2: 20*20; 50 akna\n3: 35*35; 200 akna\n4 mas\n");
+			printf("0 뒤로 가기\n1: 10*10; 10 지뢰\n2: 20*20; 50 지뢰\n3: 35*35; 200 지뢰\n4 사용자 지정\n");
 			scanf("%d", &alm);
 			system("cls");
 			switch (alm) {
@@ -403,15 +364,15 @@ int main() {
 				belep();
 				break;
 			default:
-				printf("Ervenytelen billentyu.\n");
+				printf("잘못된 입력입니다..\n");
 				break;
 			}
 			break;
-		case 3:
+		case 2:
 			tomb(0, 0, 0);
 			break;
 		default:
-			printf("Ervenytelen billentyu.\n");
+			printf("잘못된 입력입니다..\n");
 			break;
 		}
 	}
